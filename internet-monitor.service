@@ -1,22 +1,18 @@
 [Unit]
-
 Description=Monitor Internet and reboot router
-
 After=network-online.target
 
 [Service] 
-
-ExecStart=/usr/bin/python3 -u /home/pi/Documents/RebootRouter/rpi-internet-monitor.py
-
-WorkingDirectory=/home/pi/Documents/RebootRouter
-
-StandardOutput=inherit
-
-StandardError=inherit
-
+ExecStart=/usr/bin/python3 -u /home/matt/RPi-Router-Reboot/rpi-internet-monitor.py
+WorkingDirectory=/home/matt/RPi-Router-Reboot
+StandardOutput=syslog
+StandardError=syslog
+#StandardOutput=inherit
+#StandardError=inherit
 Restart=always
+#User=matt
 
-User=pi
+SyslogIdentifier=rpi-internet-monitor
 
 [Install]
 
