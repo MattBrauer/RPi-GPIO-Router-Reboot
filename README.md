@@ -1,6 +1,9 @@
-# RPi-Router-Reboot
+# RPi-GPIO-Router-Reboot
 
 Program to monitor internet connection and reboot the router by turning a power strip off and on.
+
+*This fork differs by use of GPIO rather than USB to control power strip. The reason for this is that the 
+power level of the USB is affected by events such as reboot of the Pi, leading to possibly disruptive results.*
 
 ## Highlights:
 
