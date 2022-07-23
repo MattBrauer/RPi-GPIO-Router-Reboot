@@ -1,33 +1,55 @@
 #!/usr/bin/env python3
+# sudo python3 rpi-internet-monitor.py -debug -test
 
+import RPi.GPIO as GPIO
+import signal
 import subprocess
 import sys
 import time
 from datetime import datetime
+
+# Gracefully handle reseting the GPIO state.
+def signal_handler(signal, frame):
+  print('You pressed Ctrl+C!')
+  GPIO.cleanup() # cleanup all GPIO
+  sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
+
+lampPin = 16 # The pin connected to the outlet controller.
+
+GPIO.setmode(GPIO.BCM) # Broadcom pin-numbering scheme GPIO.setup(lampPin, GPIO.OUT) # Lamp pin set as output
+GPIO.setup(lampPin, GPIO.OUT) # LED pin set as output
+GPIO.output(lampPin, GPIO.LOW)
 
 try:
     sys.argv[2] == "-test" # force a router reboot
     DELAY_BETWEEN_PINGS = 1    # delay in seconds
     DELAY_BETWEEN_TESTS = 10  # delay in seconds
     LONG_DELAY = 20 # delay in seconds
-    SITES = ["google.blah", "comcast.blah"]
+    SITES = ["google.blah", "github.blah"]
 except:
     DELAY_BETWEEN_PINGS = 1    # delay in seconds
     DELAY_BETWEEN_TESTS = 120  # delay in seconds
     LONG_DELAY = 3600 # delay in seconds
-    SITES = ["google.com", "comcast.com"]
-
+    SITES = ["google.com", "github.com"]
 
 # turn off the usb port connected to the power strip for DELAY_BETWEEN_TESTS time
 def turn_off_usb(reboot):
     if reboot == 0:
-      cmd = "sudo /home/pi/uhubctl/uhubctl -l 1-1 -a off"
+      cmd = "sudo /usr/sbin/uhubctl -l 1-1 -p 2 -a 1" #off"
+      #cmd = "GPIO.output(lampPin, GPIO.HIGH)"
       try:
-        output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+        #output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+        GPIO.output(lampPin, GPIO.HIGH)
+        output = "GPIO.output(lampPin, GPIO.HIGH)"
         debug_message(debug, output)
         time.sleep(DELAY_BETWEEN_TESTS) # wait some time for the router to power down
-        cmd = "sudo /home/pi/uhubctl/uhubctl -l 1-1 -a on"
-        output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+        cmd = "sudo /usr/sbin/uhubctl -l 1-1 -p 2 -a 0" #on"
+        #cmd = "GPIO.output(lampPin, GPIO.LOW)"
+        #output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+        GPIO.output(lampPin, GPIO.LOW)
+        output = "GPIO.output(lampPin, GPIO.LOW)"
         debug_message(debug, output)
         time.sleep(DELAY_BETWEEN_TESTS) # wait for the router to boot back up befoe continuing
         time.sleep(DELAY_BETWEEN_TESTS)
@@ -102,6 +124,7 @@ while True:
       if ret_reboot == 0:
           with open('reboot_flg.txt', 'w') as f: 
               f.write(datetime.now().strftime('%B %d, %Y %I:%M:%S %p')) 
+          print(datetime.now().strftime('%B %d, %Y %I:%M:%S %p')) 
   else:
       debug_message(debug, "---- Internet is working fine ----")
       reboot = -1
